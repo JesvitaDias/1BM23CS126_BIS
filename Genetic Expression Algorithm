@@ -1,0 +1,43 @@
+import random, math
+
+funcs=['+','-','*']
+terms=['x']
+popsize=20
+gens=50
+mutation=0.2
+
+def random_expr(depth=3):
+    if depth==0 or random.random()<0.3:
+        return random.choice(terms+['1','2','3'])
+    op=random.choice(funcs)
+    return "("+random_expr(depth-1)+op+random_expr(depth-1)+")"
+
+def eval_expr(expr,x):
+    try:
+        return eval(expr)
+    except:
+        return 1e9
+
+def fitness(expr):
+    xs=[-2,-1,0,1,2]
+    return sum(abs(eval_expr(expr,x)-(x**2+x+1)) for x in xs)
+
+pop=[random_expr() for _ in range(popsize)]
+
+for g in range(gens):
+    pop=sorted(pop,key=fitness)
+    if fitness(pop[0])==0:
+        break
+    newpop=pop[:2]
+    while len(newpop)<popsize:
+        p1,p2=random.sample(pop[:10],2)
+        cut=random.randint(1,len(p1)-1)
+        child=p1[:cut]+p2[cut:]
+        child="".join(c if random.random()>mutation else random.choice(funcs+terms+['1','2','3']) for c in child)
+        newpop.append(child)
+    pop=newpop
+
+best=pop[0]
+print("Best expression:",best)
+for x in [-2,-1,0,1,2]:
+    print("x=",x,"f(x)=",eval_expr(best,x))
