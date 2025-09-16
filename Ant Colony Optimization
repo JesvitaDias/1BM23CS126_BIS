@@ -1,0 +1,86 @@
+import numpy as np
+import random
+
+def acoNetworkRouting(graph, source, destination, numAnts=10, numIterations=20, alpha=1.0, beta=2.0, rho=0.5, q=100, initialPheromone=1.0):
+    n = len(graph)
+    pheromone = np.full((n, n), initialPheromone)
+    heuristic = np.zeros((n, n))
+   
+    for i in range(n):
+        for j in range(n):
+            if graph[i][j] > 0:
+                heuristic[i][j] = 1.0 / graph[i][j]
+   
+    bestPath = None
+    bestLength = float('inf')
+   
+    for iteration in range(numIterations):
+        allPaths = []
+        allLengths = []
+       
+        for ant in range(numAnts):
+            path = [source]
+            visited = set(path)
+            currentNode = source
+           
+            while currentNode != destination:
+                neighbors = [j for j in range(n) if graph[currentNode][j] > 0 and j not in visited]
+                if not neighbors:
+                    break
+               
+                probs = []
+                for j in neighbors:
+                    tau = pheromone[currentNode][j] ** alpha
+                    eta = heuristic[currentNode][j] ** beta
+                    probs.append(tau * eta)
+               
+                total = sum(probs)
+                probs = [p / total for p in probs]
+               
+                r = random.random()
+                cumulative = 0.0
+                for idx, p in enumerate(probs):
+                    cumulative += p
+                    if r <= cumulative:
+                        nextNode = neighbors[idx]
+                        break
+               
+                path.append(nextNode)
+                visited.add(nextNode)
+                currentNode = nextNode
+           
+            if path[-1] == destination:
+                length = sum(graph[path[i]][path[i+1]] for i in range(len(path)-1))
+                allPaths.append(path)
+                allLengths.append(length)
+               
+                if length < bestLength:
+                    bestLength = length
+                    bestPath = path
+       
+        pheromone = (1 - rho) * pheromone
+       
+        for path, length in zip(allPaths, allLengths):
+            deposit = q / length
+            for i in range(len(path) - 1):
+                pheromone[path[i]][path[i+1]] += deposit
+       
+        print(f"Iteration {iteration + 1}: Best length so far = {bestLength}")
+   
+    return bestPath, bestLength
+
+
+graph = [
+    [0, 2, 0, 1, 0],
+    [2, 0, 3, 2, 0],
+    [0, 3, 0, 0, 1],
+    [1, 2, 0, 0, 3],
+    [0, 0, 1, 3, 0]
+]
+
+sourceNode = 0
+destinationNode = 4
+
+bestPath, bestLength = acoNetworkRouting(graph, sourceNode, destinationNode)
+print(f"Best path: {bestPath}")
+print(f"Best path length: {bestLength}")
