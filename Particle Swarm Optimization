@@ -1,0 +1,35 @@
+import random
+
+def f(x,y):
+    return x**2 + y**2
+
+n=10
+dim=2
+iters=20
+low,high=-5,5
+w=0.7
+c1,c2=1.5,1.5
+
+X=[[random.uniform(low,high) for _ in range(dim)] for _ in range(n)]
+V=[[0.0 for _ in range(dim)] for _ in range(n)]
+pbest=[pos[:] for pos in X]
+pbestval=[f(pos[0],pos[1]) for pos in X]
+gbest=pbest[pbestval.index(min(pbestval))][:]
+gbestval=min(pbestval)
+
+for _ in range(iters):
+    for i in range(n):
+        r1=[random.random() for _ in range(dim)]
+        r2=[random.random() for _ in range(dim)]
+        for d in range(dim):
+            V[i][d]=w*V[i][d]+c1*r1[d]*(pbest[i][d]-X[i][d])+c2*r2[d]*(gbest[d]-X[i][d])
+            X[i][d]+=V[i][d]
+            X[i][d]=max(low,min(high,X[i][d]))
+        val=f(X[i][0],X[i][1])
+        if val<pbestval[i]:
+            pbest[i],pbestval[i]=X[i][:],val
+            if val<gbestval:
+                gbest,gbestval=X[i][:],val
+
+print("Best position:",gbest)
+print("Best value:",gbestval)
