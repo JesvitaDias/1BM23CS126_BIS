@@ -1,0 +1,36 @@
+import random
+
+items=[(10,5),(40,4),(30,6),(50,3)]
+capacity=10
+popsize=10
+gens=30
+mutation=0.1
+
+def fit(chrom):
+    v=w=0
+    for g,(val,wt) in zip(chrom,items):
+        if g==1:
+            v+=val
+            w+=wt
+    return v if w<=capacity else 0
+
+def randchrom():
+    return [random.randint(0,1) for _ in items]
+
+pop=[randchrom() for _ in range(popsize)]
+
+for _ in range(gens):
+    pop=sorted(pop,key=fit,reverse=True)
+    newpop=pop[:2]
+    while len(newpop)<popsize:
+        p1,p2=random.sample(pop[:5],2)
+        cut=random.randint(1,len(items)-1)
+        child=p1[:cut]+p2[cut:]
+        if random.random()<mutation:
+            m=random.randint(0,len(items)-1)
+            child[m]=1-child[m]
+        newpop.append(child)
+    pop=newpop
+
+best=max(pop,key=fit)
+print("Best:",best,"Value:",fit(best))
