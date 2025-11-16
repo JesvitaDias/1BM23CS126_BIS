@@ -1,0 +1,35 @@
+import random,math
+def f_rc(R,C): return 1/(2*math.pi*R*C)
+def fit(x,fd): return abs(f_rc(x[0],x[1])-fd)
+def brd(x,lb,ub,pa):
+    n=len(x); y=x[:]
+    for i in range(n):
+        if random.random()<pa:
+            y[i]=lb[i]+random.random()*(ub[i]-lb[i])
+    return y
+def cs(fd,n=15,it=40,pa=0.25):
+    lb=[1e-3,1e-9]
+    ub=[1e4,1e-3]
+    nests=[[lb[i]+random.random()*(ub[i]-lb[i]) for i in range(2)] for _ in range(n)]
+    vals=[fit(x,fd) for x in nests]
+    for _ in range(it):
+        i=random.randint(0,n-1)
+        step=[random.gauss(0,1)*(nests[i][j]-nests[random.randint(0,n-1)][j]) for j in range(2)]
+        y=[nests[i][j]+0.01*step[j] for j in range(2)]
+        y=[max(lb[j],min(ub[j],y[j])) for j in range(2)]
+        fy=fit(y,fd)
+        if fy<vals[i]:
+            nests[i],vals[i]=y,fy
+        j=random.randint(0,n-1)
+        z=brd(nests[j],lb,ub,pa)
+        fz=fit(z,fd)
+        if fz<vals[j]:
+            nests[j],vals[j]=z,fz
+    k=vals.index(min(vals))
+    return nests[k],vals[k]
+fd=1000
+sol,err=cs(fd)
+print("R:",sol[0])
+print("C:",sol[1])
+print("freq:",f_rc(sol[0],sol[1]))
+print("error:",err)
